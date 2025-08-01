@@ -4,8 +4,8 @@ FROM public.ecr.aws/lambda/python:3.9
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Add Lambda function code
+# Copy code
 COPY lambda_function.py .
+COPY model.pkl .
 
-# Define Lambda handler
 CMD ["lambda_function.lambda_handler"]
