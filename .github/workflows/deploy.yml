@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: eu-north-1
   S3_BUCKET: mlops-app-bucket
   ECR_REPOSITORY: mlops-lambda
   IMAGE_TAG: latest
@@ -45,12 +45,13 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
-      run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.$AWS_REGION.amazonaws.com
+      run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin  335965711927.dkr.ecr.$AWS_REGION.amazonaws.com
 
     - name: Build Docker image
       run: docker build -t $ECR_REPOSITORY .
 
     - name: Push Docker image to ECR
       run: |
-        docker tag mlops-lambda:latest 335965711927.dkr.ecr.eu-north-1.amazonaws.com/mlops-lambda:$IMAGE_TAG
-        docker push 335965711927.dkr.ecr.eu-north-1.amazonaws.com/mlops-lambda:$IMAGE_TAG
+        docker tag mlops-lambda:latest 335965711927.dkr.ecr.$AWS_REGION.amazonaws.com/mlops-lambda:$IMAGE_TAG
+        docker push 335965711927.dkr.ecr.$AWS_REGION.amazonaws.com/mlops-lambda:$IMAGE_TAG
+
