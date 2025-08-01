@@ -1,22 +1,22 @@
 import json
-import pickle
+import joblib
 import boto3
+import os
 
-s3 = boto3.client("s3")
-model = None
-
-def load_model():
-    global model
-    if model is None:
-        response = s3.get_object(Bucket="mlops-app-bucket", Key="model.pkl")
-        model = pickle.loads(response['Body'].read())
+# Load model from local (after copy from S3 in Dockerfile)
+model = joblib.load("model.pkl")
 
 def lambda_handler(event, context):
-    load_model()
-    body = json.loads(event["body"])
-    input_data = [body["features"]]  # Expecting a list of values
-    prediction = model.predict(input_data)
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"prediction": int(prediction[0])})
-    }
+    try:
+        input_data = json.loads(event["body"])
+        features = input_data["features"]
+        prediction = model.predict([features])[0]
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"prediction": int(prediction)})
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
