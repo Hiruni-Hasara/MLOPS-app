@@ -1,0 +1,56 @@
+name: Train and Deploy MLOps App
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: mlops-app-bucket
+  ECR_REPOSITORY: mlops-lambda
+  IMAGE_TAG: latest
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+
+    - name: Train Model
+      run: python train.py
+
+    - name: Upload model.pkl to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws configure set region $AWS_REGION
+        aws s3 cp model.pkl s3://$S3_BUCKET/model.pkl
+
+    - name: Configure AWS Credentials for ECR
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.$AWS_REGION.amazonaws.com
+
+    - name: Build Docker image
+      run: docker build -t $ECR_REPOSITORY .
+
+    - name: Push Docker image to ECR
+      run: |
+        docker tag mlops-lambda:latest 335965711927.dkr.ecr.eu-north-1.amazonaws.com/mlops-lambda:$IMAGE_TAG
+        docker push 335965711927.dkr.ecr.eu-north-1.amazonaws.com/mlops-lambda:$IMAGE_TAG
