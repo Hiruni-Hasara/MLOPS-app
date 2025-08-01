@@ -1,11 +1,12 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-import pickle
+import joblib
 
 # Load dataset
-df = pd.read_csv("https://raw.githubusercontent.com/Hiruni-Hasara/hosted-datasets/refs/heads/main/heart.csv")
+url = "https://raw.githubusercontent.com/Hiruni-Hasara/hosted-datasets/refs/heads/main/heart.csv"
+df = pd.read_csv(url)
 
-# Split features and target
+# Features and target
 X = df.drop("HeartDisease", axis=1)
 y = df["HeartDisease"]
 
@@ -14,7 +15,4 @@ model = RandomForestClassifier()
 model.fit(X, y)
 
 # Save model
-with open("model.pkl", "wb") as f:
-    pickle.dump(model, f)
-
-print("✅ Model trained and saved as model.pkl")
+joblib.dump(model, "model.pkl")
